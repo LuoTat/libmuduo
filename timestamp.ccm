@@ -1,0 +1,21 @@
+export module Muduo.Timestamp;
+
+import std;
+
+namespace ltt
+{
+
+export class Timestamp
+{
+public:
+    Timestamp();
+    Timestamp(std::chrono::system_clock::time_point time_point);
+    std::string toString() const;
+
+    static Timestamp now();
+
+private:
+    std::chrono::system_clock::time_point m_time_point;
+};
+
+}    // namespace ltt

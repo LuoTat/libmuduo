@@ -1,0 +1,69 @@
+module;
+#include <boost/core/noncopyable.hpp>
+
+export module Muduo.Logger;
+
+import std;
+
+namespace ltt
+{
+
+enum class LogLevel
+{
+    INFO,     // 普通信息
+    ERROR,    // 错误信息
+    DEBUG,    // 调试信息
+    FATAL,    // core dump 信息
+};
+
+class Logger: private boost::noncopyable
+{
+public:
+    // 设置日志级别
+    void set_loglevel(LogLevel loglevel);
+    // 写日志
+    void log(std::string_view msg);
+
+    static Logger& instance();
+
+private:
+    LogLevel m_loglevel;
+};
+
+export {
+
+    template <typename... Args>
+    inline void LOG_INFO(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger& logger {Logger::instance()};
+        logger.set_loglevel(LogLevel::INFO);
+        logger.log(std::format(fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    inline void LOG_ERROR(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger& logger {Logger::instance()};
+        logger.set_loglevel(LogLevel::ERROR);
+        logger.log(std::format(fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    inline void LOG_DEBUG(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger& logger {Logger::instance()};
+        logger.set_loglevel(LogLevel::DEBUG);
+        logger.log(std::format(fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    inline void LOG_FATAL(std::format_string<Args...> fmt, Args&&... args)
+    {
+        Logger& logger {Logger::instance()};
+        logger.set_loglevel(LogLevel::FATAL);
+        logger.log(std::format(fmt, std::forward<Args>(args)...));
+        std::exit(-1);
+    }
+}
+
+}    // namespace ltt

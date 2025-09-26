@@ -1,0 +1,62 @@
+module;
+#include <boost/core/noncopyable.hpp>
+
+export module Muduo.Core:EventLoop;
+
+import std;
+import Muduo.Timestamp;
+import :Forward;
+
+namespace ltt
+{
+
+/*
+ * 事件循环类
+ * 主要包含了两个大模块 Channel 和 EPoll
+ */
+export class EventLoop: private boost::noncopyable
+{
+public:
+    using Task              = std::function<void()>;
+    using ReadEventCallback = std::function<void(Timestamp)>;
+
+    EventLoop();
+    ~EventLoop();
+
+    void loop();
+    void quit();
+    void wakeup();
+
+    void add_task(Task task);
+    void run_task(Task task);
+
+    void update_channel(Channel* channel);
+    void remove_channel(Channel* channel);
+    bool has_channel(Channel* channel);
+
+    bool      is_in_loop_thread() const;
+    Timestamp get_poll_return_tp() const;
+
+private:
+    void run_all_tasks();
+
+    int16_t                  m_id;
+    int                      m_wakeup_fd;
+    std::unique_ptr<Channel> m_wakeup_channel;
+
+    std::unique_ptr<EPoll> m_epoll;
+    std::thread::id        m_thread_id {std::this_thread::get_id()};
+    Timestamp              m_poll_reture_tp;
+
+    std::vector<Channel*> m_ready_channels;
+    std::vector<Task>     m_tasks;
+
+    std::atomic_bool m_looping {false};
+    std::atomic_bool m_quit {false};
+    std::atomic_bool m_running_task {false};
+    std::mutex       m_mutex;
+
+    static std::atomic_int16_t m_next_id;
+};
+
+}    // namespace ltt

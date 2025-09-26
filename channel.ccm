@@ -1,0 +1,69 @@
+module;
+#include <boost/core/noncopyable.hpp>
+
+export module Muduo.Core:Channel;
+
+import std;
+import Muduo.Timestamp;
+import :Forward;
+
+namespace ltt
+{
+
+export class Channel: private boost::noncopyable
+{
+public:
+    using EventCallback     = std::function<void()>;
+    using ReadEventCallback = std::function<void(Timestamp)>;
+
+    Channel(EPoll* epoll, int fd);
+
+    ~Channel() = default;
+
+    void set_read_callback(ReadEventCallback cb);
+    void set_write_callback(EventCallback cb);
+    void set_close_callback(EventCallback cb);
+    void set_error_callback(EventCallback cb);
+
+    void add_read_event();
+    void del_read_event();
+    bool has_read_event() const;
+    void add_write_event();
+    void del_write_event();
+    bool has_write_event() const;
+    void del_all_event();
+    bool has_events() const;
+
+    // EventLoop*    get_eventloop() const;
+    EPoll*        get_epoll() const;
+    int           get_fd() const;
+    std::uint32_t get_events() const;
+    void          set_ready_events(std::uint32_t ready_events);
+    bool          get_in_epoll() const;
+    void          set_in_epoll(bool flag);
+
+    void run_event(Timestamp receive_time);
+    void tie(const std::shared_ptr<TcpConnection>& tcp_con);
+    void remove();
+
+private:
+    void update();
+    void handleEventWithGuard(Timestamp receiveTime);
+
+    // EventLoop*    m_loop;                // 绑定的事件循环
+    EPoll*        m_epoll;               // 绑定的 epoll
+    int           m_fd;                  // 绑定的 socket 文件描述符
+    std::uint32_t m_events {0};          // 注册的所有事件
+    std::uint32_t m_ready_events {0};    // poller 返回的就绪事件
+    bool          m_in_epoll {false};
+
+    std::weak_ptr<TcpConnection> m_tcp_con;
+    bool                         m_tied {false};
+
+    ReadEventCallback m_read_callback;
+    EventCallback     m_write_callback;
+    EventCallback     m_close_callback;
+    EventCallback     m_error_callback;
+};
+
+}    // namespace ltt

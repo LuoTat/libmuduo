@@ -1,0 +1,35 @@
+module;
+#include <boost/core/noncopyable.hpp>
+
+export module Muduo.Socket;
+
+import std;
+import Muduo.SockAddress;
+
+namespace ltt
+{
+
+export class Socket: private boost::noncopyable
+{
+public:
+    explicit Socket(int sockfd);
+    ~Socket();
+
+    int get_fd() const;
+
+    void bind(SockAddress addr);
+    void listen();
+    int  accept(SockAddress& addr);
+
+    void shutdown_write();
+
+    void set_tcp_no_delay(bool flag);
+    void set_reuse_addr(bool flag);
+    void set_reuse_port(bool flag);
+    void set_keep_alive(bool flag);
+
+private:
+    int m_sockfd;
+};
+
+}    // namespace ltt

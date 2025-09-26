@@ -1,0 +1,5 @@
+export module Muduo.Core;
+export import :Forward;
+export import :EPoll;
+export import :Channel;
+export import :EventLoop;

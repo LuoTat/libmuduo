@@ -1,0 +1,13 @@
+export module Muduo.Core:Forward;
+
+export {
+    namespace ltt
+    {
+
+    class EPoll;
+    class Channel;
+    class EventLoop;
+    class TcpConnection;
+
+    }    // namespace ltt
+}

@@ -1,0 +1,29 @@
+module;
+#include <netinet/in.h>
+
+export module Muduo.SockAddress;
+
+import std;
+
+namespace ltt
+{
+
+export class SockAddress
+{
+public:
+    explicit SockAddress(std::string ip = "127.0.0.1", std::uint16_t port = 0);
+
+    explicit SockAddress(sockaddr_in addr);
+
+    std::string   get_ip() const;
+    std::string   get_ip_with_port() const;
+    std::uint16_t get_port() const;
+
+    sockaddr_in get_sock_addr() const;
+    void        set_sock_addr(sockaddr_in addr);
+
+private:
+    sockaddr_in m_sock_addr;
+};
+
+}    // namespace ltt
