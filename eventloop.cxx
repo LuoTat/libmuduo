@@ -121,6 +121,11 @@ bool EventLoop::has_channel(Channel* channel)
     return m_epoll->has_channel(channel);
 }
 
+EPoll* EventLoop::get_epoll() const
+{
+    return m_epoll.get();
+}
+
 bool EventLoop::is_in_loop_thread() const
 {
     return m_thread_id == std::this_thread::get_id();

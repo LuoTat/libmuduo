@@ -34,6 +34,7 @@ public:
     void remove_channel(Channel* channel);
     bool has_channel(Channel* channel);
 
+    EPoll*    get_epoll() const;
     bool      is_in_loop_thread() const;
     Timestamp get_poll_return_tp() const;
 
