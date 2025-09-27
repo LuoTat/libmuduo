@@ -29,6 +29,7 @@ target_sources( muduo
                 sock_addr.ccm
                 socket.ccm
                 acceptor.ccm
+                buffer.ccm
 
                 PRIVATE
                 logger.cxx
@@ -39,6 +40,7 @@ target_sources( muduo
                 sock_addr.cxx
                 socket.cxx
                 acceptor.cxx
+                buffer.cxx
 )
 
 add_executable(main)

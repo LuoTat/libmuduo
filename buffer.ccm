@@ -1,0 +1,48 @@
+module;
+#include <sys/types.h>
+
+export module Muduo.Buffer;
+
+import std;
+
+namespace ltt
+{
+
+/*
+ *   [预留空间]   [可读数据]  [可写空间]
+ * |----------|----------|----------|
+ * 0    reader_index  writer_index
+ */
+export class Buffer
+{
+public:
+    static constexpr std::size_t Prepend_Size {8};
+    static constexpr std::size_t Init_Size {1024};
+
+    explicit Buffer(std::size_t size = Init_Size);
+
+    std::size_t get_read_size() const;
+    std::size_t get_write_size() const;
+    std::size_t get_unused_size() const;
+
+    const std::byte* peek() const;
+    void             retrieve(std::size_t size);
+    void             retrieve_all();
+    std::string      retrieve_as_str(std::size_t size);
+    std::string      retrieve_all_as_str();
+
+    void ensure_writable_size(std::size_t size);
+    void append(const std::byte* data, std::size_t size);
+
+    ssize_t read(int fd);
+    ssize_t write(int fd);
+
+private:
+    void resize_writable_size(std::size_t size);
+
+    std::vector<std::byte> m_buffer;          // 底层数据存储
+    std::size_t            m_reader_index;    // 读指针位置
+    std::size_t            m_writer_index;    // 写指针位置
+};
+
+}    // namespace ltt
