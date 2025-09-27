@@ -20,8 +20,8 @@ static int create_sockfd()
     return sockfd;
 }
 
-Acceptor::Acceptor(EPoll* epoll, const SockAddress& addr):
-    m_epoll {epoll}, m_accept_socket {create_sockfd()}, m_accept_channel {epoll, m_accept_socket.get_fd()}
+Acceptor::Acceptor(EventLoop* eventloop, const SockAddress& addr):
+    m_eventloop {eventloop}, m_accept_socket {create_sockfd()}, m_accept_channel {eventloop->get_epoll(), m_accept_socket.get_fd()}
 {
     m_accept_socket.set_reuse_addr(true);    // 快速重启
     m_accept_socket.set_reuse_port(true);    // 多进程负载均衡
