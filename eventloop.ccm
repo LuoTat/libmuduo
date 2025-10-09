@@ -27,15 +27,18 @@ public:
     void quit();
     void wakeup();
 
-    void add_task(Task task);
     void run_task(Task task);
+    void add_task(Task task);
 
-    void update_channel(Channel* channel);
-    void remove_channel(Channel* channel);
-    bool has_channel(Channel* channel);
-
-    EPoll*    get_epoll() const;
-    bool      is_in_loop_thread() const;
+    [[nodiscard]]
+    EPoll* get_epoll() const;
+    [[nodiscard]]
+    int16_t get_id() const;
+    [[nodiscard]]
+    std::thread::id get_thread_id() const;
+    [[nodiscard]]
+    bool is_in_loop_thread() const;
+    [[nodiscard]]
     Timestamp get_poll_return_tp() const;
 
 private:
@@ -47,7 +50,7 @@ private:
 
     std::unique_ptr<EPoll> m_epoll;
     std::thread::id        m_thread_id {std::this_thread::get_id()};
-    Timestamp              m_poll_reture_tp;
+    Timestamp              m_poll_return_tp;
 
     std::vector<Channel*> m_ready_channels;
     std::vector<Task>     m_tasks;
@@ -56,8 +59,6 @@ private:
     std::atomic_bool m_quit {false};
     std::atomic_bool m_running_task {false};
     std::mutex       m_mutex;
-
-    static std::atomic_int16_t m_next_id;
 };
 
 }    // namespace ltt

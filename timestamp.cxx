@@ -11,7 +11,7 @@ Timestamp::Timestamp(std::chrono::system_clock::time_point time_point):
     m_time_point {time_point}
 {}
 
-std::string Timestamp::toString() const
+std::string Timestamp::to_string() const
 {
     // 构造本地时区的 zoned_time
     std::chrono::zoned_time local {std::chrono::current_zone(), m_time_point};

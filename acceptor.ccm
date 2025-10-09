@@ -14,21 +14,22 @@ namespace ltt
 export class Acceptor: private boost::noncopyable
 {
 public:
-    using NewConnectionCallback = std::function<void(int sockfd, const SockAddress&)>;
+    using NewConnectionCallback = std::function<void(int, SockAddress)>;
 
-    Acceptor(EventLoop* eventloop, const SockAddress& addr);
+    Acceptor(EventLoop* loop, SockAddress addr);
     ~Acceptor();
 
     void listen();
-    bool listenning() const;
+    [[nodiscard]]
+    bool is_listening() const;
     void set_new_conn_callback(NewConnectionCallback cb);
 
 private:
-    EventLoop*            m_eventloop;                // Acceptor 用的是 mainLoop 的 epoll
-    Socket                m_accept_socket;            //专门用于接收新连接的 socket
-    Channel               m_accept_channel;           //专门用于监听新连接的 channel
-    NewConnectionCallback m_new_conn_callback;        //新连接的回调函数
-    bool                  m_is_listenning {false};    //是否在监听
+    EventLoop*            m_loop;                    // Acceptor 用的是 mainloop
+    Socket                m_accept_socket;           // 专门用于接收新连接的 socket
+    Channel               m_accept_channel;          // 专门用于监听新连接的 channel
+    NewConnectionCallback m_new_conn_cb;             // 有新连接时的回调函数
+    bool                  m_is_listening {false};    // 是否在监听
 };
 
 }    // namespace ltt

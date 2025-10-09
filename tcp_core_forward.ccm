@@ -1,0 +1,22 @@
+export module Muduo.TCPCore:Forward;
+
+import std;
+import Muduo.Buffer;
+import Muduo.Timestamp;
+
+namespace ltt
+{
+
+export {
+    class TcpServer;
+    class TcpConnection;
+
+    using TcpConnectionPtr          = std::shared_ptr<TcpConnection>;
+    using ConnectionChangedCallback = std::function<void(TcpConnectionPtr)>;
+    using REventCallback            = std::function<void(TcpConnectionPtr, Buffer*, Timestamp)>;
+    using WEventCallback            = std::function<void(TcpConnectionPtr)>;
+    using CloseCallback             = std::function<void(TcpConnectionPtr)>;
+    using HighWaterMarkCallback     = std::function<void(TcpConnectionPtr, std::size_t)>;
+}
+
+}    // namespace ltt

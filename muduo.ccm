@@ -1,8 +1,11 @@
 export module Muduo;
+export import Muduo.Core;
+export import Muduo.TCPCore;
 export import Muduo.Logger;
 export import Muduo.Timestamp;
-export import Muduo.Core;
-export import Muduo.SockAddress;
 export import Muduo.Socket;
+export import Muduo.SockAddress;
 export import Muduo.Acceptor;
 export import Muduo.Buffer;
+export import Muduo.EventLoopThread;
+export import Muduo.EventLoopThreadPool;

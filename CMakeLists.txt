@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1.1)
+cmake_minimum_required(VERSION 4.1.2)
 
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
 
@@ -20,7 +20,9 @@ target_sources( muduo
                 FILE_SET CXX_MODULES FILES
                 muduo.ccm
                 core.ccm
+                tcp_core.ccm
                 core_forward.ccm
+                tcp_core_forward.ccm
                 logger.ccm
                 timestamp.ccm
                 epoll.ccm
@@ -30,6 +32,10 @@ target_sources( muduo
                 socket.ccm
                 acceptor.ccm
                 buffer.ccm
+                tcp_connection.ccm
+                tcp_server.ccm
+                eventloop_thread.ccm
+                eventloop_threadpool.ccm
 
                 PRIVATE
                 logger.cxx
@@ -41,6 +47,10 @@ target_sources( muduo
                 socket.cxx
                 acceptor.cxx
                 buffer.cxx
+                tcp_connection.cxx
+                tcp_server.cxx
+                eventloop_thread.cxx
+                eventloop_threadpool.cxx
 )
 
 add_executable(main)

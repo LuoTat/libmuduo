@@ -18,18 +18,18 @@ namespace ltt
 export class EPoll
 {
 public:
-    EPoll(EventLoop* eventloop);
+    explicit EPoll(EventLoop* loop);
     ~EPoll();
 
-    Timestamp poll(std::chrono::milliseconds ms, std::span<Channel*> ready_channels);
+    Timestamp poll(std::chrono::milliseconds ms, std::vector<Channel*>& ready_channels);
     void      update_channel(Channel* channel);
     void      remove_channel(Channel* channel);
     bool      has_channel(Channel* channel) const;
 
 private:
-    void update_epoll(Channel* channel, int flag);
+    void update_epoll(Channel* channel, int flag) const;
 
-    EventLoop*                        m_eventloop;       // 绑定的事件循环
+    EventLoop*                        m_loop;            // 绑定的事件循环
     int                               m_epoll_fd;        // 绑定的 epoll 文件描述符
     std::unordered_map<int, Channel*> m_channels_map;    // key:sockfd value:Channel*
     std::vector<epoll_event>          m_epoll_events;    // 用于存放 epoll_wait 返回的所有就绪的事件

@@ -1,0 +1,35 @@
+module;
+#include <boost/core/noncopyable.hpp>
+
+export module Muduo.EventLoopThread;
+
+import std;
+import Muduo.Core;
+
+namespace ltt
+{
+
+export class EventLoopThread: private boost::noncopyable
+{
+public:
+    using ThreadInitCallback = std::function<void(EventLoop*)>;
+
+    EventLoopThread(ThreadInitCallback cb, std::string name);
+    ~EventLoopThread();
+
+    EventLoop* start_loop();
+    [[nodiscard]]
+    std::string get_name() const;
+
+private:
+    EventLoop*         m_loop {nullptr};
+    std::string        m_name;
+    std::jthread       m_thread;
+    bool               m_exiting {false};
+    ThreadInitCallback m_thrinit_cb;
+
+    std::mutex              m_mutex;    // 互斥锁
+    std::condition_variable m_cond;     // 条件变量
+};
+
+}    // namespace ltt

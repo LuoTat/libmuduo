@@ -8,61 +8,96 @@ import std;
 namespace ltt
 {
 
-enum class LogLevel
-{
-    INFO,     // 普通信息
-    ERROR,    // 错误信息
-    DEBUG,    // 调试信息
-    FATAL,    // core dump 信息
-};
-
-class Logger: private boost::noncopyable
-{
-public:
-    // 设置日志级别
-    void set_loglevel(LogLevel loglevel);
-    // 写日志
-    void log(std::string_view msg);
-
-    static Logger& instance();
-
-private:
-    LogLevel m_loglevel;
-};
-
 export {
-
-    template <typename... Args>
-    inline void LOG_INFO(std::format_string<Args...> fmt, Args&&... args)
+    enum LogLevel
     {
-        Logger& logger {Logger::instance()};
-        logger.set_loglevel(LogLevel::INFO);
-        logger.log(std::format(fmt, std::forward<Args>(args)...));
+        FATAL,         // core dump 信息
+        ERROR,         // 错误信息
+        INFO,          // 普通信息
+        DEBUG,         // 调试信息
+        FUNC_BEGIN,    // 函数开始
+        FUNC_END,      // 函数结束
+        FUNC_INFO,     // 函数调用信息
+    };
+
+    struct Logger: private boost::noncopyable
+    {
+        // 写日志
+        static void log(LogLevel level, std::string_view msg);
+
+        // 编译期控制
+        static constexpr LogLevel s_build_loglevel {LogLevel::ERROR};
+        // 运行期控制
+        inline static LogLevel s_runtime_loglevel {LogLevel::ERROR};
+        // thread_local 层级
+        inline static int st_indent_level {0};
+    };
+
+    // -------------------- 核心模板 --------------------
+    template <LogLevel level, typename... Args>
+    inline void LOG(std::format_string<Args...> fmt, Args&&... args)
+    {
+        if constexpr (level <= Logger::s_build_loglevel)
+        {
+            if (level <= Logger::s_runtime_loglevel)
+            {
+                Logger::log(level, std::format(fmt, std::forward<Args>(args)...));
+            }
+        }
+    }
+
+    // -------------------- 各别名函数 --------------------
+    template <typename... Args>
+    inline void LOG_FATAL(std::format_string<Args...> fmt, Args&&... args)
+    {
+        LOG<LogLevel::FATAL>(fmt, std::forward<Args>(args)...);
+        std::exit(-1);
     }
 
     template <typename... Args>
     inline void LOG_ERROR(std::format_string<Args...> fmt, Args&&... args)
     {
-        Logger& logger {Logger::instance()};
-        logger.set_loglevel(LogLevel::ERROR);
-        logger.log(std::format(fmt, std::forward<Args>(args)...));
+        LOG<LogLevel::ERROR>(fmt, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    inline void LOG_INFO(std::format_string<Args...> fmt, Args&&... args)
+    {
+        LOG<LogLevel::INFO>(fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     inline void LOG_DEBUG(std::format_string<Args...> fmt, Args&&... args)
     {
-        Logger& logger {Logger::instance()};
-        logger.set_loglevel(LogLevel::DEBUG);
-        logger.log(std::format(fmt, std::forward<Args>(args)...));
+        LOG<LogLevel::DEBUG>(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
-    inline void LOG_FATAL(std::format_string<Args...> fmt, Args&&... args)
+    // -------------------- FUNC_BEGIN / FUNC_END --------------------
+    inline void LOG_FUNC_BEGIN(std::string_view func_name = std::source_location::current().function_name())
     {
-        Logger& logger {Logger::instance()};
-        logger.set_loglevel(LogLevel::FATAL);
-        logger.log(std::format(fmt, std::forward<Args>(args)...));
-        std::exit(-1);
+        if constexpr (LogLevel::FUNC_BEGIN <= Logger::s_build_loglevel)
+        {
+            if (LogLevel::FUNC_BEGIN <= Logger::s_runtime_loglevel)
+            {
+                std::string indent(Logger::st_indent_level * 0, ' ');
+                Logger::log(LogLevel::FUNC_BEGIN, std::format("{}{} begin", indent, func_name));
+                ++Logger::st_indent_level;
+            }
+        }
+    }
+
+    inline void LOG_FUNC_END(std::string_view func_name = std::source_location::current().function_name())
+    {
+        if constexpr (LogLevel::FUNC_END <= Logger::s_build_loglevel)
+        {
+            if (LogLevel::FUNC_END <= Logger::s_runtime_loglevel)
+            {
+                if (Logger::st_indent_level > 0)
+                    --Logger::st_indent_level;
+                std::string indent(Logger::st_indent_level * 0, ' ');
+                Logger::log(LogLevel::FUNC_END, std::format("{}{}   end", indent, func_name));
+            }
+        }
     }
 }
 

@@ -1,13 +1,14 @@
 export module Muduo.Core:Forward;
 
-export {
-    namespace ltt
-    {
+import std;
 
+namespace ltt
+{
+
+export {
     class EPoll;
     class Channel;
     class EventLoop;
-    class TcpConnection;
-
-    }    // namespace ltt
 }
+
+}    // namespace ltt

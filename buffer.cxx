@@ -1,5 +1,5 @@
 module;
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 #include <sys/uio.h>
 
@@ -11,9 +11,8 @@ namespace ltt
 {
 
 Buffer::Buffer(std::size_t size):
-    m_buffer(Prepend_Size + size), m_reader_index(Prepend_Size), m_writer_index(Prepend_Size)
-{
-}
+    m_buffer {Prepend_Size + size}, m_reader_index {Prepend_Size}, m_writer_index {Prepend_Size}
+{}
 
 std::size_t Buffer::get_read_size() const
 {
@@ -68,15 +67,16 @@ void Buffer::ensure_writable_size(std::size_t size)
         resize_writable_size(size);    // 扩容
 }
 
-void Buffer::append(const std::byte* data, std::size_t size)
+void Buffer::append(const std::span<const std::byte>& data)
 {
-    ensure_writable_size(size);
-    std::copy(data, data + size, m_buffer.data() + m_writer_index);
-    m_writer_index += size;
+    ensure_writable_size(data.size_bytes());
+    std::copy(data.cbegin(), data.cend(), m_buffer.data() + m_writer_index);
+    m_writer_index += data.size_bytes();
 }
 
 ssize_t Buffer::read(int fd)
 {
+    LOG_FUNC_BEGIN();
     // 栈额外空间，用于从套接字往出读时，当 m_buffer 暂时不够用时暂存数据，
     // 待 m_buffer 重新分配足够空间后，再把数据交换给 m_buffer
     std::byte buf[65536];
@@ -100,32 +100,34 @@ ssize_t Buffer::read(int fd)
     ssize_t ret {readv(fd, vec, (write_size >= sizeof(buf)) ? 1 : 2)};
 
     if (ret < 0)
-        LOG_ERROR("readv failed! error:{}", std::strerror(errno));
+        LOG_ERROR("readv() failed! error:{}", std::strerror(errno));
     // m_buffer 够存储读出来的数据
     else if (std::cmp_less_equal(ret, write_size))
         m_writer_index += ret;
     else
     {
         m_writer_index = m_buffer.size();
-        append(buf, ret - write_size);
+        append(std::span(buf, ret - write_size));
     }
+    LOG_FUNC_END();
     return ret;
 }
 
-ssize_t Buffer::write(int fd)
+ssize_t Buffer::write(int fd) const
 {
+    LOG_FUNC_BEGIN();
     ssize_t ret {::write(fd, peek(), get_read_size())};
     if (ret < 0)
-        LOG_ERROR("write failed! error:{}", std::strerror(errno));
+        LOG_ERROR("write() failed! error:{}", std::strerror(errno));
+    LOG_FUNC_END();
     return ret;
 }
 
 void Buffer::resize_writable_size(std::size_t size)
 {
+    LOG_FUNC_BEGIN();
     if (get_write_size() + get_unused_size() < size + Prepend_Size)
-    {
         m_buffer.resize(m_writer_index + size);
-    }
     else
     {
         std::size_t read_size {get_read_size()};
@@ -133,6 +135,7 @@ void Buffer::resize_writable_size(std::size_t size)
         m_reader_index = Prepend_Size;
         m_writer_index = m_reader_index + read_size;
     }
+    LOG_FUNC_END();
 }
 
 }    // namespace ltt

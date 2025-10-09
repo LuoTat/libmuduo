@@ -15,18 +15,17 @@ public:
     explicit Socket(int sockfd);
     ~Socket();
 
-    int get_fd() const;
+    void bind(SockAddress addr) const;
+    void listen() const;
+    int  accept(SockAddress& peer_addr) const;
+    void shutdown_write() const;
 
-    void bind(SockAddress addr);
-    void listen();
-    int  accept(SockAddress& addr);
-
-    void shutdown_write();
-
-    void set_tcp_no_delay(bool flag);
-    void set_reuse_addr(bool flag);
-    void set_reuse_port(bool flag);
-    void set_keep_alive(bool flag);
+    [[nodiscard]]
+    int  get_fd() const;
+    void set_tcp_no_delay(bool flag) const;
+    void set_reuse_addr(bool flag) const;
+    void set_reuse_port(bool flag) const;
+    void set_keep_alive(bool flag) const;
 
 private:
     int m_sockfd;

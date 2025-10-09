@@ -8,40 +8,41 @@ import Muduo.Logger;
 namespace ltt
 {
 
-Channel::Channel(EPoll* epoll, int fd):
+Channel::Channel(int fd, EPoll* epoll):
     m_epoll {epoll}, m_fd {fd}
 {}
 
-void Channel::set_read_callback(ReadEventCallback cb)
+void Channel::set_read_callback(REventCallback cb)
 {
-    m_read_callback = std::move(cb);
+    m_read_cb = std::move(cb);
 }
 
 void Channel::set_write_callback(EventCallback cb)
 {
-    m_write_callback = std::move(cb);
-}
-
-void Channel::set_close_callback(EventCallback cb)
-{
-    m_close_callback = std::move(cb);
+    m_write_cb = std::move(cb);
 }
 
 void Channel::set_error_callback(EventCallback cb)
 {
-    m_error_callback = std::move(cb);
+    m_error_cb = std::move(cb);
 }
 
 void Channel::add_read_event()
 {
+    LOG_FUNC_BEGIN();
     m_events |= (EPOLLIN | EPOLLPRI);
     update();
+    LOG_INFO("channel of fd:{} has add a read event", m_fd);
+    LOG_FUNC_END();
 }
 
 void Channel::del_read_event()
 {
+    LOG_FUNC_BEGIN();
     m_events &= ~(EPOLLIN | EPOLLPRI);
     update();
+    LOG_INFO("channel of fd:{} has del a read event", m_fd);
+    LOG_FUNC_END();
 }
 
 bool Channel::has_read_event() const
@@ -51,14 +52,20 @@ bool Channel::has_read_event() const
 
 void Channel::add_write_event()
 {
+    LOG_FUNC_BEGIN();
     m_events |= EPOLLOUT;
     update();
+    LOG_INFO("channel of fd:{} has add a write event", m_fd);
+    LOG_FUNC_END();
 }
 
 void Channel::del_write_event()
 {
+    LOG_FUNC_BEGIN();
     m_events &= ~EPOLLOUT;
     update();
+    LOG_INFO("channel of fd:{} has del a write event", m_fd);
+    LOG_FUNC_END();
 }
 
 bool Channel::has_write_event() const
@@ -68,8 +75,11 @@ bool Channel::has_write_event() const
 
 void Channel::del_all_event()
 {
+    LOG_FUNC_BEGIN();
     m_events = 0;
     update();
+    LOG_INFO("channel of fd:{} has del all events", m_fd);
+    LOG_FUNC_END();
 }
 
 bool Channel::has_events() const
@@ -97,7 +107,7 @@ void Channel::set_ready_events(std::uint32_t ready_events)
     m_ready_events = ready_events;
 }
 
-bool Channel::get_in_epoll() const
+bool Channel::is_in_epoll() const
 {
     return m_in_epoll;
 }
@@ -109,39 +119,36 @@ void Channel::set_in_epoll(bool flag)
 
 void Channel::run_event(Timestamp receive_time)
 {
+    LOG_FUNC_BEGIN();
     // 如果没有绑定到 TcpConnection
     // 或者 TcpConnection 还没有被销毁
     if (!m_tied || m_tcp_con.lock())
     {
-        LOG_DEBUG("channel of fd:{} runs the events:{}", m_fd, m_ready_events);
-
-        // 关闭事件
-        // 当 TcpConnection 对应 Channel 通过 shutdown 关闭写端从而触发 EPOLLHUP
-        // 并且没有可读数据
-        if ((m_ready_events & EPOLLHUP) && !(m_ready_events & EPOLLIN))
-        {
-            if (m_close_callback)
-                m_close_callback();
-        }
         // 错误事件
         if (m_ready_events & EPOLLERR)
         {
-            if (m_error_callback)
-                m_error_callback();
+            LOG_INFO("channel of fd:{} run a error event", m_fd);
+            if (m_error_cb)
+                m_error_cb();
+            LOG_FUNC_END();
+            return;
         }
         // 读事件
         if (m_ready_events & (EPOLLIN | EPOLLPRI))
         {
-            if (m_read_callback)
-                m_read_callback(receive_time);
+            LOG_INFO("channel of fd:{} run a read event", m_fd);
+            if (m_read_cb)
+                m_read_cb(receive_time);
         }
         // 写事件
         if (m_ready_events & EPOLLOUT)
         {
-            if (m_write_callback)
-                m_write_callback();
+            LOG_INFO("channel of fd:{} run a write event", m_fd);
+            if (m_write_cb)
+                m_write_cb();
         }
     }
+    LOG_FUNC_END();
 }
 
 /*
@@ -150,7 +157,7 @@ void Channel::run_event(Timestamp receive_time)
  * 此处用 m_tcp_con 去持有 TcpConnection 而不增加其引用次数
  * 这样就可以判断 TcpConnection 有没有销毁
  */
-void Channel::tie(const std::shared_ptr<TcpConnection>& tcp_con)
+void Channel::tie(const std::shared_ptr<void>& tcp_con)
 {
     m_tcp_con = tcp_con;
     m_tied    = true;
@@ -158,12 +165,16 @@ void Channel::tie(const std::shared_ptr<TcpConnection>& tcp_con)
 
 void Channel::remove()
 {
+    LOG_FUNC_BEGIN();
     m_epoll->remove_channel(this);
+    LOG_FUNC_END();
 }
 
 void Channel::update()
 {
+    LOG_FUNC_BEGIN();
     m_epoll->update_channel(this);
+    LOG_FUNC_END();
 }
 
 }    // namespace ltt

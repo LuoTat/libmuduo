@@ -9,8 +9,8 @@ export class Timestamp
 {
 public:
     Timestamp();
-    Timestamp(std::chrono::system_clock::time_point time_point);
-    std::string toString() const;
+    explicit Timestamp(std::chrono::system_clock::time_point time_point);
+    [[nodiscard]] std::string to_string() const;
 
     static Timestamp now();
 
