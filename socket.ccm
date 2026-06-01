@@ -1,6 +1,3 @@
-module;
-#include <boost/core/noncopyable.hpp>
-
 export module Muduo.Socket;
 
 import std;
@@ -9,10 +6,17 @@ import Muduo.SockAddress;
 namespace ltt
 {
 
-export class Socket: private boost::noncopyable
+export class Socket
 {
 public:
     explicit Socket(int sockfd);
+
+    Socket(const Socket&)            = delete;
+    Socket& operator=(const Socket&) = delete;
+
+    Socket(Socket&&)            = default;
+    Socket& operator=(Socket&&) = default;
+
     ~Socket();
 
     void bind(SockAddress addr) const;

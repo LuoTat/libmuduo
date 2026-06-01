@@ -44,7 +44,7 @@ private:
     WEventCallback            m_writeevent_cb;    // 写事件后的回调
     ThreadInitCallback        m_threadinit_cb;    // m_loop 线程初始化的回调
 
-    int            m_thread_num;                  //线程池中线程的数量。
+    int            m_thread_num {1};              //线程池中线程的数量。
     int            m_next_conn_id {1};
     std::once_flag m_start_flag;
 

@@ -3,12 +3,10 @@ module Muduo.Timestamp;
 namespace ltt
 {
 
-Timestamp::Timestamp():
-    m_time_point {std::chrono::system_clock::time_point::min()}
+Timestamp::Timestamp(): m_time_point {std::chrono::system_clock::time_point::min()}
 {}
 
-Timestamp::Timestamp(std::chrono::system_clock::time_point time_point):
-    m_time_point {time_point}
+Timestamp::Timestamp(std::chrono::system_clock::time_point time_point): m_time_point {time_point}
 {}
 
 std::string Timestamp::to_string() const

@@ -14,13 +14,12 @@ namespace ltt
  * 0    reader_index  writer_index
  */
 export class Buffer
-
 {
 public:
-    static constexpr std::size_t Prepend_Size {8};
-    static constexpr std::size_t Init_Size {1024};
+    static constexpr std::size_t m_Prepend_Size {8};
+    static constexpr std::size_t m_Init_Size {1024};
 
-    explicit Buffer(std::size_t size = Init_Size);
+    explicit Buffer(std::size_t size = m_Init_Size);
 
     [[nodiscard]]
     std::size_t get_read_size() const;
@@ -40,6 +39,7 @@ public:
     void append(const std::span<const std::byte>& data);
 
     ssize_t read(int fd);
+    [[nodiscard]]
     ssize_t write(int fd) const;
 
 private:

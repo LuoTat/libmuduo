@@ -12,7 +12,7 @@ EventLoopThreadPool::EventLoopThreadPool(EventLoop* loop, std::string name):
 EventLoopThreadPool::~EventLoopThreadPool()
 {}
 
-void EventLoopThreadPool::start(ThreadInitCallback cb)
+void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 {
     LOG_FUNC_BEGIN();
     m_started = true;
@@ -22,8 +22,10 @@ void EventLoopThreadPool::start(ThreadInitCallback cb)
         m_loops.push_back(m_threads.back()->start_loop());
     }
 
-    if (!m_threads_num && cb)    // 整个服务端只有一个线程运行 m_base_loop
+    if ((m_threads_num == 0) && cb)
+    {    // 整个服务端只有一个线程运行 m_base_loop
         cb(m_base_loop);
+    }
 
     LOG_FUNC_END();
 }
@@ -46,7 +48,9 @@ EventLoop* EventLoopThreadPool::get_next_loop()
 
         // 轮询
         if (m_next_id >= m_loops.size())
+        {
             m_next_id = 0;
+        }
     }
 
     return next_loop;
@@ -55,9 +59,10 @@ EventLoop* EventLoopThreadPool::get_next_loop()
 std::vector<EventLoop*> EventLoopThreadPool::get_all_loops() const
 {
     if (m_loops.empty())
+    {
         return std::vector {m_base_loop};
-    else
-        return m_loops;
+    }
+    return m_loops;
 }
 
 std::string EventLoopThreadPool::get_name() const

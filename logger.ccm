@@ -1,6 +1,3 @@
-module;
-#include <boost/core/noncopyable.hpp>
-
 export module Muduo.Logger;
 
 import std;
@@ -9,7 +6,7 @@ namespace ltt
 {
 
 export {
-    enum LogLevel
+    enum class LogLevel : std::uint8_t
     {
         FATAL,         // core dump 信息
         ERROR,         // 错误信息
@@ -20,26 +17,34 @@ export {
         FUNC_INFO,     // 函数调用信息
     };
 
-    struct Logger: private boost::noncopyable
+    struct Logger
     {
+        Logger() = delete;
+
+        Logger(const Logger&)            = delete;
+        Logger& operator=(const Logger&) = delete;
+
+        Logger(Logger&&)            = default;
+        Logger& operator=(Logger&&) = default;
+
+        ~Logger() = default;
+
         // 写日志
         static void log(LogLevel level, std::string_view msg);
 
         // 编译期控制
-        static constexpr LogLevel s_build_loglevel {LogLevel::ERROR};
+        static constexpr LogLevel m_build_loglevel {LogLevel::ERROR};
         // 运行期控制
-        inline static LogLevel s_runtime_loglevel {LogLevel::ERROR};
-        // thread_local 层级
-        inline static int st_indent_level {0};
+        inline static LogLevel m_runtime_loglevel {LogLevel::ERROR};
     };
 
     // -------------------- 核心模板 --------------------
     template <LogLevel level, typename... Args>
     inline void LOG(std::format_string<Args...> fmt, Args&&... args)
     {
-        if constexpr (level <= Logger::s_build_loglevel)
+        if constexpr (level <= Logger::m_build_loglevel)
         {
-            if (level <= Logger::s_runtime_loglevel)
+            if (level <= Logger::m_runtime_loglevel)
             {
                 Logger::log(level, std::format(fmt, std::forward<Args>(args)...));
             }
@@ -75,27 +80,22 @@ export {
     // -------------------- FUNC_BEGIN / FUNC_END --------------------
     inline void LOG_FUNC_BEGIN(std::string_view func_name = std::source_location::current().function_name())
     {
-        if constexpr (LogLevel::FUNC_BEGIN <= Logger::s_build_loglevel)
+        if constexpr (LogLevel::FUNC_BEGIN <= Logger::m_build_loglevel)
         {
-            if (LogLevel::FUNC_BEGIN <= Logger::s_runtime_loglevel)
+            if (LogLevel::FUNC_BEGIN <= Logger::m_runtime_loglevel)
             {
-                std::string indent(Logger::st_indent_level * 0, ' ');
-                Logger::log(LogLevel::FUNC_BEGIN, std::format("{}{} begin", indent, func_name));
-                ++Logger::st_indent_level;
+                Logger::log(LogLevel::FUNC_BEGIN, std::format("{} begin", func_name));
             }
         }
     }
 
     inline void LOG_FUNC_END(std::string_view func_name = std::source_location::current().function_name())
     {
-        if constexpr (LogLevel::FUNC_END <= Logger::s_build_loglevel)
+        if constexpr (LogLevel::FUNC_END <= Logger::m_build_loglevel)
         {
-            if (LogLevel::FUNC_END <= Logger::s_runtime_loglevel)
+            if (LogLevel::FUNC_END <= Logger::m_runtime_loglevel)
             {
-                if (Logger::st_indent_level > 0)
-                    --Logger::st_indent_level;
-                std::string indent(Logger::st_indent_level * 0, ' ');
-                Logger::log(LogLevel::FUNC_END, std::format("{}{}   end", indent, func_name));
+                Logger::log(LogLevel::FUNC_END, std::format("{}   end", func_name));
             }
         }
     }

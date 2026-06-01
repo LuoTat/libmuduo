@@ -27,7 +27,7 @@ public:
     void        set_sock_addr(sockaddr_in addr);
 
 private:
-    sockaddr_in m_sock_addr;
+    sockaddr_in m_sock_addr {};
 };
 
 }    // namespace ltt

@@ -1,8 +1,8 @@
 module;
 #include <cerrno>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 module Muduo.Acceptor;
 
@@ -12,15 +12,22 @@ import Muduo.Timestamp;
 namespace ltt
 {
 
-static int create_sockfd()
+namespace
+{
+
+int create_sockfd()
 {
     LOG_FUNC_BEGIN();
     int sockfd {socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP)};
     if (sockfd < 0)
+    {
         LOG_FATAL("socket() failed! error:{}", std::strerror(errno));
+    }
     LOG_FUNC_END();
     return sockfd;
 }
+
+}    // namespace
 
 Acceptor::Acceptor(EventLoop* loop, SockAddress addr):
     m_loop {loop}, m_accept_socket {create_sockfd()}, m_accept_channel {m_accept_socket.get_fd(), loop->get_epoll()}
@@ -49,7 +56,7 @@ void Acceptor::listen()
     // 当 EPoll 检测到 m_accept_socket 可读（有新连接）时
     // m_accept_channel 就会调用这里的回调函数
     m_accept_channel.set_read_callback(
-        [this](Timestamp)
+        [this](Timestamp) -> void
         {
             LOG_FUNC_BEGIN("Acceptor REventCallback");
             SockAddress peer_addr;
@@ -57,12 +64,17 @@ void Acceptor::listen()
             if (connfd > 0)
             {
                 if (m_new_conn_cb)
+                {
                     m_new_conn_cb(connfd, peer_addr);
+                }
                 else
+                {
                     close(connfd);
+                }
             }
             LOG_FUNC_END("Acceptor REventCallback");
-        });
+        }
+    );
     // 把 m_accept_channel 注册至 EPoll 中
     m_accept_channel.add_read_event();
     LOG_FUNC_END();

@@ -1,6 +1,6 @@
 module;
-#include <cerrno>
 #include <arpa/inet.h>
+#include <cerrno>
 
 module Muduo.SockAddress;
 
@@ -14,19 +14,20 @@ SockAddress::SockAddress(std::string ip, std::uint16_t port)
     std::memset(&m_sock_addr, 0, sizeof(m_sock_addr));
     m_sock_addr.sin_family = AF_INET;
     m_sock_addr.sin_port   = htons(port);
-    if (!inet_pton(AF_INET, ip.c_str(), &m_sock_addr.sin_addr))
+    if (inet_pton(AF_INET, ip.c_str(), &m_sock_addr.sin_addr) == 0)
+    {
         LOG_ERROR("inet_pton() failed! Invalid IP string format:{}", ip);
+    }
 }
 
-SockAddress::SockAddress(sockaddr_in addr):
-    m_sock_addr(addr)
+SockAddress::SockAddress(sockaddr_in addr): m_sock_addr(addr)
 {}
 
 std::string SockAddress::get_ip() const
 {
     std::string ip;
     ip.resize(INET_ADDRSTRLEN);
-    if (!inet_ntop(AF_INET, &m_sock_addr.sin_addr, ip.data(), ip.size()))
+    if (inet_ntop(AF_INET, &m_sock_addr.sin_addr, ip.data(), ip.size()) == nullptr)
     {
         LOG_ERROR("inet_ntop() failed! error:{}", std::strerror(errno));
         return {};
@@ -41,7 +42,7 @@ std::string SockAddress::get_ip_with_port() const
 {
     std::string ip;
     ip.resize(INET_ADDRSTRLEN);
-    if (!inet_ntop(AF_INET, &m_sock_addr.sin_addr, ip.data(), ip.size()))
+    if (inet_ntop(AF_INET, &m_sock_addr.sin_addr, ip.data(), ip.size()) == nullptr)
     {
         LOG_ERROR("inet_ntop() failed! error:{}", std::strerror(errno));
         return {};

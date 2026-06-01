@@ -1,3 +1,5 @@
+#include <utility>
+
 import std;
 import Muduo;
 
@@ -14,29 +16,36 @@ constexpr char response[] = "HTTP/1.1 200 OK\r\n"
 class LTTServer
 {
 public:
-    LTTServer(EventLoop* loop, SockAddress addr, std::string name):
-        m_server {loop, addr, name}
+    LTTServer(EventLoop* loop, SockAddress addr, std::string name): m_server {loop, addr, std::move(name)}
     {
         // 注册回调函数
         m_server.set_thread_init_callback(
-            [](EventLoop* loop)
+            [](EventLoop* loop) -> void
             {
                 LOG_INFO("subloop thread[{}] is inited", loop->get_thread_id());
-            });
+            }
+        );
 
         m_server.set_connection_changed_callback(
-            [](const TcpConnectionPtr&) {});
+            [](const TcpConnectionPtr&) -> void
+            {
+            }
+        );
 
         m_server.set_revent_callback(
-            [](const TcpConnectionPtr& conn_tcp, Buffer* buf, Timestamp)
+            [](const TcpConnectionPtr& conn_tcp, Buffer* buf, Timestamp) -> void
             {
                 buf->retrieve_all();
                 conn_tcp->send(std::as_bytes(std::span {response, std::strlen(response)}));
                 conn_tcp->shutdown();
-            });
+            }
+        );
 
         m_server.set_wevent_callback(
-            [](const TcpConnectionPtr&) {});
+            [](const TcpConnectionPtr&) -> void
+            {
+            }
+        );
 
         m_server.set_thread_num(16);
     }

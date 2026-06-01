@@ -1,8 +1,8 @@
 module;
 #include <cerrno>
-#include <unistd.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <unistd.h>
 
 module Muduo.Socket;
 
@@ -11,8 +11,7 @@ import Muduo.Logger;
 namespace ltt
 {
 
-Socket::Socket(int sockfd):
-    m_sockfd {sockfd}
+Socket::Socket(int sockfd): m_sockfd {sockfd}
 {}
 
 Socket::~Socket()
@@ -24,8 +23,10 @@ void Socket::bind(SockAddress addr) const
 {
     LOG_FUNC_BEGIN();
     auto sock_addr {addr.get_sock_addr()};
-    if (::bind(m_sockfd, reinterpret_cast<sockaddr*>(&sock_addr), sizeof(sockaddr_in)))
+    if (::bind(m_sockfd, std::bit_cast<sockaddr*>(&sock_addr), sizeof(sockaddr_in)) != 0)
+    {
         LOG_FATAL("bind() failed! error:{}", std::strerror(errno));
+    }
     LOG_INFO("socket of fd:{} has bind to [{}]", m_sockfd, addr.get_ip_with_port());
     LOG_FUNC_END();
 }
@@ -33,8 +34,10 @@ void Socket::bind(SockAddress addr) const
 void Socket::listen() const
 {
     LOG_FUNC_BEGIN();
-    if (::listen(m_sockfd, 1024))
+    if (::listen(m_sockfd, 1024) != 0)
+    {
         LOG_FATAL("listen() failed! error:{}", std::strerror(errno));
+    }
     LOG_INFO("socket of fd:{} is listening", m_sockfd);
     LOG_FUNC_END();
 }
@@ -44,14 +47,16 @@ int Socket::accept(SockAddress& peer_addr) const
     LOG_FUNC_BEGIN();
     sockaddr_in peer_addr_in {};
     socklen_t   len {sizeof(peer_addr_in)};
-    int         connfd {accept4(m_sockfd, reinterpret_cast<sockaddr*>(&peer_addr_in), &len, SOCK_NONBLOCK | SOCK_CLOEXEC)};
+    int         connfd {accept4(m_sockfd, std::bit_cast<sockaddr*>(&peer_addr_in), &len, SOCK_NONBLOCK | SOCK_CLOEXEC)};
     if (connfd > 0)
     {
         peer_addr.set_sock_addr(peer_addr_in);
         LOG_INFO("socket of fd:{} has accepted a new connection from [{}]", m_sockfd, peer_addr.get_ip_with_port());
     }
     else
+    {
         LOG_ERROR("accept4 failed! error:{}", std::strerror(errno));
+    }
     LOG_FUNC_END();
     return connfd;
 }
@@ -59,14 +64,20 @@ int Socket::accept(SockAddress& peer_addr) const
 void Socket::shutdown_write() const
 {
     LOG_FUNC_BEGIN();
-    if (!shutdown(m_sockfd, SHUT_WR))
+    if (shutdown(m_sockfd, SHUT_WR) == 0)
+    {
         LOG_INFO("socket of fd:{} has shutdown write", m_sockfd);
+    }
     else
     {
         if (errno == ENOTCONN)
+        {
             LOG_INFO("socket of fd:{} is not connected, no need to shutdown write", m_sockfd);
+        }
         else
+        {
             LOG_ERROR("shutdown_write failed! error:{}", std::strerror(errno));
+        }
         LOG_FUNC_END();
     }
 }

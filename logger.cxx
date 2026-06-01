@@ -20,9 +20,7 @@ void Logger::log(LogLevel level, std::string_view msg)
         case LogLevel::FATAL :
             std::println("[{}] {}[FATAL]{}{}", Timestamp::now().to_string(), white_red, reset, msg);
             break;
-        case LogLevel::ERROR :
-            std::println("[{}] {}[ERROR]{}{}", Timestamp::now().to_string(), red, reset, msg);
-            break;
+        case LogLevel::ERROR : std::println("[{}] {}[ERROR]{}{}", Timestamp::now().to_string(), red, reset, msg); break;
         case LogLevel::INFO :
             std::println("[{}] {}[INFO]{} {}", Timestamp::now().to_string(), green, reset, msg);
             break;
@@ -35,8 +33,7 @@ void Logger::log(LogLevel level, std::string_view msg)
         case LogLevel::FUNC_END :
             std::println("[{}] {}[FUNC_INFO]{} {}{}{}", Timestamp::now().to_string(), blue, reset, magenta, msg, reset);
             break;
-        default :
-            break;
+        default : break;
     }
 }
 

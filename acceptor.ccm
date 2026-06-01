@@ -1,6 +1,3 @@
-module;
-#include <boost/core/noncopyable.hpp>
-
 export module Muduo.Acceptor;
 
 import std;
@@ -11,12 +8,19 @@ import Muduo.SockAddress;
 namespace ltt
 {
 
-export class Acceptor: private boost::noncopyable
+export class Acceptor
 {
 public:
     using NewConnectionCallback = std::function<void(int, SockAddress)>;
 
     Acceptor(EventLoop* loop, SockAddress addr);
+
+    Acceptor(const Acceptor&)            = delete;
+    Acceptor& operator=(const Acceptor&) = delete;
+
+    Acceptor(Acceptor&&)            = default;
+    Acceptor& operator=(Acceptor&&) = default;
+
     ~Acceptor();
 
     void listen();
@@ -25,11 +29,11 @@ public:
     void set_new_conn_callback(NewConnectionCallback cb);
 
 private:
-    EventLoop*            m_loop;                    // Acceptor 用的是 mainloop
-    Socket                m_accept_socket;           // 专门用于接收新连接的 socket
-    Channel               m_accept_channel;          // 专门用于监听新连接的 channel
-    NewConnectionCallback m_new_conn_cb;             // 有新连接时的回调函数
-    bool                  m_is_listening {false};    // 是否在监听
+    EventLoop*            m_loop;                     // Acceptor 用的是 mainloop
+    Socket                m_accept_socket;            // 专门用于接收新连接的 socket
+    Channel               m_accept_channel;           // 专门用于监听新连接的 channel
+    NewConnectionCallback m_new_conn_cb {nullptr};    // 有新连接时的回调函数
+    bool                  m_is_listening {false};     // 是否在监听
 };
 
 }    // namespace ltt

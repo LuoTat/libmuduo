@@ -8,8 +8,7 @@ import Muduo.Logger;
 namespace ltt
 {
 
-Channel::Channel(int fd, EPoll* epoll):
-    m_epoll {epoll}, m_fd {fd}
+Channel::Channel(int fd, EPoll* epoll): m_epoll {epoll}, m_fd {fd}
 {}
 
 void Channel::set_read_callback(REventCallback cb)
@@ -47,7 +46,7 @@ void Channel::del_read_event()
 
 bool Channel::has_read_event() const
 {
-    return m_events & (EPOLLIN | EPOLLPRI);
+    return (m_events & (EPOLLIN | EPOLLPRI)) != 0U;
 }
 
 void Channel::add_write_event()
@@ -70,7 +69,7 @@ void Channel::del_write_event()
 
 bool Channel::has_write_event() const
 {
-    return m_events & EPOLLOUT;
+    return (m_events & EPOLLOUT) != 0U;
 }
 
 void Channel::del_all_event()
@@ -125,27 +124,33 @@ void Channel::run_event(Timestamp receive_time)
     if (!m_tied || m_tcp_con.lock())
     {
         // 错误事件
-        if (m_ready_events & EPOLLERR)
+        if ((m_ready_events & EPOLLERR) != 0U)
         {
             LOG_INFO("channel of fd:{} run a error event", m_fd);
             if (m_error_cb)
+            {
                 m_error_cb();
+            }
             LOG_FUNC_END();
             return;
         }
         // 读事件
-        if (m_ready_events & (EPOLLIN | EPOLLPRI))
+        if ((m_ready_events & (EPOLLIN | EPOLLPRI)) != 0U)
         {
             LOG_INFO("channel of fd:{} run a read event", m_fd);
             if (m_read_cb)
+            {
                 m_read_cb(receive_time);
+            }
         }
         // 写事件
-        if (m_ready_events & EPOLLOUT)
+        if ((m_ready_events & EPOLLOUT) != 0U)
         {
             LOG_INFO("channel of fd:{} run a write event", m_fd);
             if (m_write_cb)
+            {
                 m_write_cb();
+            }
         }
     }
     LOG_FUNC_END();
